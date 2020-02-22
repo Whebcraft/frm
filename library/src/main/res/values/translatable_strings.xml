@@ -16,7 +16,7 @@
     <string name="apply">Apply</string>
     <string name="favorite">Favorite</string>
 
-    <string name="palette">Palette</string>
+    <string name="palette">Colors</string>
     <string name="tap_to_copy">Tap to copy</string>
     <string name="copied_to_clipboard">Copied color to clipboard</string>
 
@@ -68,8 +68,8 @@
     <string name="applying_applied">Wallpaper applied successfully</string>
 
     <string name="search">Search</string>
-    <string name="changelog">Changelog</string>
-    <string name="donate">Donate</string>
+    <string name="changelog">Updates</string>
+    <string name="donate">Share App</string>
     <string name="about">About</string>
     <string name="settings">Settings</string>
 
