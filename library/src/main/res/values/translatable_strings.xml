@@ -24,7 +24,7 @@
     <string name="author">Uploaded by</string>
     <string name="name">Name</string>
     <string name="file_size">File size</string>
-    <string name="copyright">Copyright</string>
+    <string name="copyright">Description</string>
 
     <string name="permission_denied">Access to storage permission has been denied</string>
     <string name="permission_permanently_denied">Access to storage permission has been denied previously. You will have to manually enable it in Settings.</string>
