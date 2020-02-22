@@ -116,7 +116,7 @@ class AboutActivity : BaseThemedActivity<Prefs>() {
             AboutItem(
                 "Lucky Whebcraft",
                 getString(R.string.jahir_description),
-                "https://www.creativecodez.com/flatch/lucky.jpg",
+                "https://www.creativecodez.com/flatch/lucky.png",
                 arrayListOf(
                     "Message" to "https://api.whatsapp.com/send?phone=2348102064720&text=Hello"
                 )
@@ -124,7 +124,7 @@ class AboutActivity : BaseThemedActivity<Prefs>() {
             AboutItem(
                 "Milla Joy",
                 getString(R.string.eduardo_description),
-                "https://www.creativecodez.com/flatch/joy.jpg",
+                "https://www.creativecodez.com/flatch/joy.png",
                 arrayListOf(
                     "Message" to "https://api.whatsapp.com/send?phone=2348071503684&text=Hello"
                 )
