@@ -114,20 +114,19 @@ class AboutActivity : BaseThemedActivity<Prefs>() {
     private fun getInternalAboutItems(): ArrayList<AboutItem> {
         return arrayListOf(
             AboutItem(
-                "Creativecodez",
+                "Lucky Whebcraft",
                 getString(R.string.jahir_description),
-                "https://www.creativecodez.com/masterclass/Creativeweb_hi_res_512.png",
+                "https://www.creativecodez.com/flatch/lucky.jpg",
                 arrayListOf(
-                    "Website" to "https://www.creativecodez.com",
-                    "Facebook" to "https://web.facebook.com/creativecodez"
+                    "Message" to "https://api.whatsapp.com/send?phone=2348102064720&text=Hello"
                 )
             ),
             AboutItem(
-                "Creativecodez",
+                "Milla Joy",
                 getString(R.string.eduardo_description),
-                "https://www.creativecodez.com/masterclass/Creativeweb_hi_res_512.png",
+                "https://www.creativecodez.com/flatch/joy.jpg",
                 arrayListOf(
-                    "Google Play" to "https://play.google.com/store/apps/developer?id=Creativecodez&hl=en"
+                    "Message" to "https://api.whatsapp.com/send?phone=2348071503684&text=Hello"
                 )
             )
         )
