@@ -103,7 +103,7 @@
     <string name="use_amoled_theme_summary">Requires dark theme enabled either in app or system-wide</string>
     <string name="colored_navigation_bar">Colored navigation bar</string>
     <string name="interface_animations">Interface animations</string>
-    <string name="interface_animations_summary">Disable if you\'re experiencing poor performance</string>
+    <string name="interface_animations_summary">Disable this if the app slows down</string>
 
     <string name="data_and_storage">Data and storage</string>
     <string name="display_full_res_previews">Display full resolution previews</string>
@@ -126,7 +126,7 @@
 
     <string name="donate_success_title">Thank you</string>
     <string name="donate_success_content">Thank you so much for your donation. I really appreciate it and I\'m glad you\'re enjoying %1$s.</string>
-    <string name="donate_error">Unexpected error with code %1$s occurred due to %2$s</string>
+    <string name="donate_error">Flatch is available on Google Play</string>
     <string name="donate_error_unknown">unknown reasons</string>
     <string name="close">Close</string>
 </resources>
