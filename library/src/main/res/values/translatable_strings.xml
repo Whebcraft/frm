@@ -120,9 +120,9 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_conditions">Terms and Conditions</string>
 
-    <string name="dashboard">Company Info</string>
-    <string name="jahir_description">We create experiences that reimagine the way people interact with technology.</string>
-    <string name="eduardo_description">We dont just build apps. We create the kind of apps that people talk about, that they use over and over again.</string>
+    <string name="dashboard">Developers</string>
+    <string name="jahir_description">Software Developer</string>
+    <string name="eduardo_description">UI/UX Expert</string>
 
     <string name="donate_success_title">Thank you</string>
     <string name="donate_success_content">Thank you so much for your donation. I really appreciate it and I\'m glad you\'re enjoying %1$s.</string>
