@@ -7,7 +7,7 @@
     <item android:bottom="@dimen/splash_logo_bottom">
         <bitmap
             android:gravity="center"
-            android:src="@drawable/app_splash_screen_picture"
+            android:src="@drawable/app_logo"
             android:tileMode="disabled" />
     </item>
 </layer-list>
