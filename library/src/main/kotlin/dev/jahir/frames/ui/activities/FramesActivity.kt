@@ -3,9 +3,20 @@ package dev.jahir.frames.ui.activities
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.DecelerateInterpolator
+import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import dev.jahir.frames.R
+import dev.jahir.frames.extensions.findView
 import dev.jahir.frames.extensions.hasContent
+import dev.jahir.frames.extensions.invisible
+import dev.jahir.frames.extensions.visible
 import dev.jahir.frames.ui.activities.base.BaseDonationsActivity
 import dev.jahir.frames.ui.fragments.CollectionsFragment
 import dev.jahir.frames.ui.fragments.WallpapersFragment
@@ -27,8 +38,8 @@ abstract class FramesActivity : BaseDonationsActivity<Prefs>() {
     }
 
     private var currentFragment: Fragment? = null
-    private var currentTag: String = WallpapersFragment.TAG
-    private var oldTag: String = WallpapersFragment.TAG
+    private var currentTag: String = INITIAL_FRAGMENT_TAG
+    private var oldTag: String = INITIAL_FRAGMENT_TAG
     private var currentMenuItemId: Int = R.id.wallpapers
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,15 +117,56 @@ abstract class FramesActivity : BaseDonationsActivity<Prefs>() {
     private fun loadFragment(fragment: Fragment?, tag: String) {
         fragment ?: return
         if (currentFragment !== fragment) {
-            val ft = supportFragmentManager.beginTransaction()
-            if (fragment.isAdded) {
-                currentFragment?.let { ft.hide(it).show(fragment) }
-            } else {
-                currentFragment?.let { ft.hide(it).add(R.id.fragments_container, fragment, tag) }
+            fadeFragmentTransition {
+                val ft = supportFragmentManager.beginTransaction()
+                currentFragment?.let { ft.hide(it).setMaxLifecycle(it, Lifecycle.State.STARTED) }
+                if (fragment.isAdded) {
+                    ft.show(fragment)
+                } else {
+                    ft.add(R.id.fragments_container, fragment, tag)
+                }
+                ft.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+                currentFragment = fragment
+                ft.commit()
+                updateSearchHint()
             }
-            currentFragment = fragment
-            ft.commit()
-            updateSearchHint()
+        }
+    }
+
+    private fun fadeFragmentTransition(
+        @IdRes viewId: Int = R.id.fragments_container,
+        fragmentTransaction: () -> Unit = {}
+    ) {
+        val fragmentsContainer by findView<View>(viewId)
+
+        fragmentsContainer?.let { container ->
+            val fadeOut = AlphaAnimation(1F, 0F)
+            fadeOut.interpolator = DecelerateInterpolator()
+            fadeOut.duration = FRAGMENT_TRANSITION_DURATION
+
+            fadeOut.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationEnd(p0: Animation?) {
+                    container.invisible()
+                    fragmentTransaction()
+
+                    val fadeIn = AlphaAnimation(0F, 1F)
+                    fadeIn.interpolator = AccelerateInterpolator()
+                    fadeIn.startOffset = FRAGMENT_TRANSITION_OFFSET_DURATION
+                    fadeIn.duration = FRAGMENT_TRANSITION_DURATION
+
+                    val animation = AnimationSet(false)
+                    animation.addAnimation(fadeIn)
+                    container.visible()
+                    container.animation = animation
+                }
+
+                override fun onAnimationRepeat(p0: Animation?) {}
+                override fun onAnimationStart(p0: Animation?) {}
+            })
+
+            val animation = AnimationSet(false)
+            animation.addAnimation(fadeOut)
+            container.animation = animation
         }
     }
 
@@ -130,39 +182,16 @@ abstract class FramesActivity : BaseDonationsActivity<Prefs>() {
 
     override fun internalDoSearch(filter: String, closed: Boolean) {
         super.internalDoSearch(filter, closed)
-        (currentFragment as? BaseFramesFragment<*>)?.setRefreshEnabled(!filter.hasContent())
-        when (currentTag) {
-            WallpapersFragment.TAG -> filterWallpapers(filter, closed)
-            CollectionsFragment.TAG -> filterCollections(filter, closed)
-            WallpapersFragment.FAVS_TAG -> filterFavorites(filter, closed)
+        (currentFragment as? BaseFramesFragment<*>)?.let {
+            it.setRefreshEnabled(!filter.hasContent())
+            it.applyFilter(filter, closed)
         }
-    }
-
-    private fun filterWallpapers(filter: String = "", closed: Boolean = false) {
-        (currentFragment as? WallpapersFragment)?.applyFilter(
-            filter,
-            ArrayList(wallpapersViewModel.wallpapers),
-            closed
-        )
-    }
-
-    private fun filterCollections(filter: String = "", closed: Boolean = false) {
-        (currentFragment as? CollectionsFragment)?.applyFilter(
-            filter,
-            ArrayList(wallpapersViewModel.collections),
-            closed
-        )
-    }
-
-    private fun filterFavorites(filter: String = "", closed: Boolean = false) {
-        (currentFragment as? WallpapersFragment)?.applyFilter(
-            filter,
-            ArrayList(wallpapersViewModel.favorites),
-            closed
-        )
     }
 
     companion object {
         private const val CURRENT_FRAGMENT_KEY = "current_fragment"
+        private const val INITIAL_FRAGMENT_TAG = WallpapersFragment.TAG
+        private const val FRAGMENT_TRANSITION_DURATION = 100L
+        private const val FRAGMENT_TRANSITION_OFFSET_DURATION = 50L
     }
 }

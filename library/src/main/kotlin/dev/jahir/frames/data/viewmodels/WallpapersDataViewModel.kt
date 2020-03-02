@@ -12,6 +12,7 @@ import dev.jahir.frames.data.models.Collection
 import dev.jahir.frames.data.models.Favorite
 import dev.jahir.frames.data.models.Wallpaper
 import dev.jahir.frames.data.network.WallpapersJSONService
+import dev.jahir.frames.extensions.hasContent
 import dev.jahir.frames.extensions.isNetworkAvailable
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -75,18 +76,41 @@ class WallpapersDataViewModel : ViewModel() {
 
     private suspend fun getWallpapersFromDatabase(context: Context): List<Wallpaper> =
         withContext(IO) {
-            FramesDatabase.getAppDatabase(context)?.wallpapersDao()?.getAllWallpapers().orEmpty()
+            try {
+                FramesDatabase.getAppDatabase(context)?.wallpapersDao()?.getAllWallpapers()
+                    .orEmpty()
+            } catch (e: Exception) {
+                arrayListOf<Wallpaper>()
+            }
+        }
+
+    private suspend fun deleteAllWallpapers(context: Context) =
+        withContext(IO) {
+            try {
+                FramesDatabase.getAppDatabase(context)?.wallpapersDao()?.nuke()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
     private suspend fun saveWallpapers(context: Context, wallpapers: List<Wallpaper>) =
         withContext(IO) {
-            FramesDatabase.getAppDatabase(context)?.wallpapersDao()?.insertAll(wallpapers)
+            try {
+                deleteAllWallpapers(context)
+                FramesDatabase.getAppDatabase(context)?.wallpapersDao()?.insertAll(wallpapers)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
     private suspend fun getFavorites(context: Context): List<Favorite> =
         withContext(IO) {
-            FramesDatabase.getAppDatabase(context)?.favoritesDao()?.getAllFavorites()
-                .orEmpty()
+            try {
+                FramesDatabase.getAppDatabase(context)?.favoritesDao()?.getAllFavorites()
+                    .orEmpty()
+            } catch (e: Exception) {
+                arrayListOf<Favorite>()
+            }
         }
 
     private suspend fun internalAddToFavorites(context: Context, wallpaper: Wallpaper) =
@@ -112,21 +136,34 @@ class WallpapersDataViewModel : ViewModel() {
     fun loadData(context: Context, url: String = "") {
         viewModelScope.launch {
             val favorites = getFavorites(context)
-            var wallpapers = getWallpapersFromDatabase(context)
-            if (wallpapers.isEmpty() || context.isNetworkAvailable()) {
-                wallpapers = if (url.isNotEmpty() && url.isNotBlank()) {
+
+            val remoteWallpapers: List<Wallpaper> =
+                if (context.isNetworkAvailable() && url.hasContent()) {
                     try {
-                        service.getJSON(url).filter { it.url.isNotEmpty() }
+                        service.getJSON(url)
                     } catch (e: Exception) {
-                        wallpapersData?.value.orEmpty()
+                        arrayListOf<Wallpaper>()
                     }
-                } else wallpapersData?.value.orEmpty()
-            } else wallpapersData?.value.orEmpty()
-            wallpapers = wallpapers.map { wall ->
-                wall.apply { this.isInFavorites = favorites.any { fav -> fav.url == wall.url } }
+                } else arrayListOf()
+
+            val localWallpapers = try {
+                getWallpapersFromDatabase(context)
+            } catch (e: Exception) {
+                arrayListOf<Wallpaper>()
             }
-            postWallpapers(wallpapers)
+
+            val wallpapers =
+                (if (remoteWallpapers.isNotEmpty()) remoteWallpapers else localWallpapers)
+                    .filter { it.url.hasContent() }
+                    .distinctBy { it.url }
+                    .map { wall ->
+                        wall.apply {
+                            this.isInFavorites = favorites.any { fav -> fav.url == wall.url }
+                        }
+                    }
+
             saveWallpapers(context, wallpapers)
+            postWallpapers(wallpapers)
 
             val actualFavorites =
                 wallpapers.filter { wllppr -> favorites.any { fav -> fav.url == wllppr.url } }
@@ -155,6 +192,29 @@ class WallpapersDataViewModel : ViewModel() {
             } catch (e: Exception) {
             }
             loadData(context)
+        }
+    }
+
+    private fun repostAllData(context: Context?) {
+        context ?: return
+        viewModelScope.launch {
+            postWallpapers(wallpapers)
+            val favorites = getFavorites(context)
+            val actualFavorites =
+                wallpapers.filter { wllppr -> favorites.any { fav -> fav.url == wllppr.url } }
+            postFavorites(actualFavorites)
+            postCollections(collections)
+        }
+    }
+
+    fun repostData(context: Context?, key: Int) {
+        context ?: return
+        viewModelScope.launch {
+            when (key) {
+                1 -> postCollections(collections)
+                0 -> postWallpapers(wallpapers)
+                else -> repostAllData(context)
+            }
         }
     }
 

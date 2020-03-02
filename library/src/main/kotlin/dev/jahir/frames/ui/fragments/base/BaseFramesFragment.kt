@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.core.os.postDelayed
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import dev.jahir.frames.R
 import dev.jahir.frames.extensions.findView
@@ -15,10 +16,9 @@ import dev.jahir.frames.ui.activities.base.BaseFavoritesConnectedActivity
 import dev.jahir.frames.ui.widgets.EmptyView
 import dev.jahir.frames.ui.widgets.EmptyViewRecyclerView
 
-open class BaseFramesFragment<T> : Fragment(), EmptyViewRecyclerView.StateChangeListener {
+abstract class BaseFramesFragment<T> : Fragment(), EmptyViewRecyclerView.StateChangeListener {
 
-    internal var items: ArrayList<T> = ArrayList()
-
+    internal val originalItems: ArrayList<T> = ArrayList()
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
     internal val recyclerView: EmptyViewRecyclerView? by findView(R.id.recycler_view)
     private val emptyView: EmptyView? by findView(R.id.empty_view)
@@ -35,26 +35,25 @@ open class BaseFramesFragment<T> : Fragment(), EmptyViewRecyclerView.StateChange
         super.onViewCreated(view, savedInstanceState)
         recyclerView?.emptyView = emptyView
         recyclerView?.stateChangeListener = this
+        recyclerView?.itemAnimator = DefaultItemAnimator()
         recyclerView?.state = EmptyViewRecyclerView.State.LOADING
         swipeRefreshLayout = view.findViewById(R.id.swipe_to_refresh)
         swipeRefreshLayout?.setOnRefreshListener { startRefreshing() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as? BaseFavoritesConnectedActivity<*>)?.repostData(getRepostKey())
     }
 
     internal fun setRefreshEnabled(enabled: Boolean) {
         swipeRefreshLayout?.isEnabled = enabled
     }
 
-    internal fun applyFilter(filter: String, originalItems: ArrayList<T>, closed: Boolean) {
+    internal fun applyFilter(filter: String, closed: Boolean) {
         recyclerView?.state = EmptyViewRecyclerView.State.LOADING
-        internalApplyFilter(filter, originalItems, closed)
+        updateItemsInAdapter(getFilteredItems(filter, closed))
         if (!closed) scrollToTop()
-    }
-
-    internal open fun internalApplyFilter(
-        filter: String,
-        originalItems: ArrayList<T>,
-        closed: Boolean
-    ) {
     }
 
     private fun startRefreshing() {
@@ -79,8 +78,13 @@ open class BaseFramesFragment<T> : Fragment(), EmptyViewRecyclerView.StateChange
 
     @CallSuper
     open fun updateItems(newItems: ArrayList<T>) {
-        this.items.clear()
-        this.items.addAll(newItems)
+        this.originalItems.clear()
+        this.originalItems.addAll(newItems)
+        updateItemsInAdapter(newItems)
         stopRefreshing()
     }
+
+    abstract fun getFilteredItems(filter: String, closed: Boolean): ArrayList<T>
+    abstract fun updateItemsInAdapter(items: ArrayList<T>)
+    abstract fun getRepostKey(): Int
 }

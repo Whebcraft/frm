@@ -33,7 +33,13 @@ abstract class BaseFavoritesConnectedActivity<out P : Prefs> : BaseSystemUIVisib
         try {
             wallpapersViewModel.loadData(this)
         } catch (e: Exception) {
-            e.printStackTrace()
+        }
+    }
+
+    internal fun repostData(key: Int) {
+        try {
+            wallpapersViewModel.repostData(this, key)
+        } catch (e: Exception) {
         }
     }
 }
